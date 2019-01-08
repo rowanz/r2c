@@ -1,0 +1,54 @@
+{
+  "dataset_reader": {
+    "type": "vswag"
+  },
+  "model": {
+    "type": "MultiHopAttentionQA",
+    "span_encoder": {
+      "type": "lstm",
+      "input_size": 1280,
+      "hidden_size": 256,
+      "num_layers": 1,
+      "bidirectional": true
+    },
+    "reasoning_encoder": {
+      "type": "lstm",
+      "input_size": 1536,
+      "hidden_size": 256,
+      "num_layers": 2,
+      "bidirectional": true
+    },
+    "hidden_dim_maxpool": 1024,
+    "input_dropout": 0.3,
+    "pool_question": true,
+    "pool_answer": true,
+    "initializer": [
+    [".*final_mlp.*weight", {"type": "xavier_uniform"}],
+    [".*final_mlp.*bias", {"type": "zero"}],
+    [".*weight_ih.*", {"type": "xavier_uniform"}],
+    [".*weight_hh.*", {"type": "orthogonal"}],
+    [".*bias_ih.*", {"type": "zero"}],
+    [".*bias_hh.*", {"type": "lstm_hidden_bias"}]]
+  },
+  "trainer": {
+    "optimizer": {
+        "type": "adam",
+        "lr": 0.0002,
+        "weight_decay": 0.0001
+    },
+    "validation_metric": "+accuracy",
+    "num_serialized_models_to_keep": 2,
+    "num_epochs": 20,
+    "grad_norm": 1.0,
+    "patience": 3,
+    "cuda_device": 0,
+    "learning_rate_scheduler": {
+      "type": "reduce_on_plateau",
+      "factor": 0.5,
+      "mode": "max",
+      "patience": 1,
+      "verbose": true,
+      "cooldown": 2
+    }
+  }
+}
