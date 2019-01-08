@@ -2,6 +2,8 @@
 
 This repository contains data and PyTorch code for the paper [From Recognition to Cognition: Visual Commonsense Reasoning (arxiv)](https://visualcommonsense.com). For more info, check out the project page at [visualcommonsense.com](https://visualcommonsense.com).
 
+![visualization](https://i.imgur.com/5XTaEkx.png "Visualization")
+
 This repo should be ready to replicate my results from the paper. If you have any issues with getting it set up though, please file a github issue. Still, the paper is just an arxiv version, so there might be more updates in the future. I'm super excited about VCR but it should be viewed as knowledge that's still in the making :)
 
 # Setting up and using the repo
