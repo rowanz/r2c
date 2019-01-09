@@ -261,8 +261,8 @@ def collate_fn(data, to_gpu=False):
 
     if to_gpu:
         for k in td:
-            td[k] = {k2: v.cuda(async=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
-                async=True)
+            td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
+                non_blocking=True)
     # # No nested dicts
     # for k in sorted(td.keys()):
     #     if isinstance(td[k], dict):
