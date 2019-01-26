@@ -2,7 +2,7 @@
 Let's get the relationships yo
 """
 
-from typing import Dict
+from typing import Dict, List, Any
 
 import torch
 import torch.nn.functional as F
@@ -121,7 +121,7 @@ class AttentionQA(Model):
                 answers: Dict[str, torch.Tensor],
                 answer_tags: torch.LongTensor,
                 answer_mask: torch.LongTensor,
-                ind: torch.LongTensor = None,
+                metadata: List[Dict[str, Any]] = None,
                 label: torch.LongTensor = None) -> Dict[str, torch.Tensor]:
         """
         :param images: [batch_size, 3, im_height, im_width]
@@ -134,7 +134,7 @@ class AttentionQA(Model):
         :param answers: AllenNLP representation of the answer. [batch_size, num_answers, seq_length]
         :param answer_tags: A detection label for each item in the A [batch_size, num_answers, seq_length]
         :param answer_mask: Mask for the As [batch_size, num_answers, seq_length]
-        :param ind: Ignore, this is about which dataset item we're on
+        :param metadata: Ignore, this is about which dataset item we're on
         :param label: Optional, which item is valid
         :return: shit
         """
