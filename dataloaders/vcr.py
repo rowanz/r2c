@@ -7,7 +7,7 @@ import os
 import numpy as np
 import torch
 from allennlp.data.dataset import Batch
-from allennlp.data.fields import TextField, ListField, LabelField, SequenceLabelField, ArrayField
+from allennlp.data.fields import TextField, ListField, LabelField, SequenceLabelField, ArrayField, MetadataField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import ELMoTokenCharactersIndexer
 from allennlp.data.tokenizers import Token
@@ -24,7 +24,44 @@ from config import VCR_IMAGES_DIR, VCR_ANNOTS_DIR
 GENDER_NEUTRAL_NAMES = ['Casey', 'Riley', 'Jessie', 'Jackie', 'Avery', 'Jaime', 'Peyton', 'Kerry', 'Jody', 'Kendall',
                         'Peyton', 'Skyler', 'Frankie', 'Pat', 'Quinn']
 
-# {"movie": "3015_CHARLIE_ST_CLOUD", "objects": ["person", "person", "person", "car"], "interesting_scores": [0], "answer_likelihood": "possible", "img_fn": "lsmdc_3015_CHARLIE_ST_CLOUD/3015_CHARLIE_ST_CLOUD_00.23.57.935-00.24.00.783@0.jpg", "metadata_fn": "lsmdc_3015_CHARLIE_ST_CLOUD/3015_CHARLIE_ST_CLOUD_00.23.57.935-00.24.00.783@0.json", "answer_orig": "No she does not", "question_orig": "Does 3 feel comfortable?", "rationale_orig": "She is standing with her arms crossed and looks disturbed", "question": ["Does", [2], "feel", "comfortable", "?"], "answer_match_iter": [3, 0, 2, 1], "answer_sources": [3287, 0, 10184, 2260], "answer_choices": [["Yes", "because", "the", "person", "sitting", "next", "to", "her", "is", "smiling", "."], ["No", "she", "does", "not", "."], ["Yes", ",", "she", "is", "wearing", "something", "with", "thin", "straps", "."], ["Yes", ",", "she", "is", "cold", "."]], "answer_label": 1, "rationale_choices": [["There", "is", "snow", "on", "the", "ground", ",", "and", "she", "is", "wearing", "a", "coat", "and", "hate", "."], ["She", "is", "standing", "with", "her", "arms", "crossed", "and", "looks", "disturbed", "."], ["She", "is", "sitting", "very", "rigidly", "and", "tensely", "on", "the", "edge", "of", "the", "bed", ".", "her", "posture", "is", "not", "relaxed", "and", "her", "face", "looks", "serious", "."], [[2], "is", "laying", "in", "bed", "but", "not", "sleeping", ".", "she", "looks", "sad", "and", "is", "curled", "into", "a", "ball", "."]], "rationale_sources": [1921, 0, 9750, 25743], "rationale_match_iter": [3, 0, 2, 1], "rationale_label": 1, "img_id": "train-0", "question_number": 0, "annot_id": "train-0", "match_fold": "train-0", "match_index": 0}
+
+# Here's an example jsonl
+# {
+# "movie": "3015_CHARLIE_ST_CLOUD",
+# "objects": ["person", "person", "person", "car"],
+# "interesting_scores": [0],
+# "answer_likelihood": "possible",
+# "img_fn": "lsmdc_3015_CHARLIE_ST_CLOUD/3015_CHARLIE_ST_CLOUD_00.23.57.935-00.24.00.783@0.jpg",
+# "metadata_fn": "lsmdc_3015_CHARLIE_ST_CLOUD/3015_CHARLIE_ST_CLOUD_00.23.57.935-00.24.00.783@0.json",
+# "answer_orig": "No she does not",
+# "question_orig": "Does 3 feel comfortable?",
+# "rationale_orig": "She is standing with her arms crossed and looks disturbed",
+# "question": ["Does", [2], "feel", "comfortable", "?"],
+# "answer_match_iter": [3, 0, 2, 1],
+# "answer_sources": [3287, 0, 10184, 2260],
+# "answer_choices": [
+#     ["Yes", "because", "the", "person", "sitting", "next", "to", "her", "is", "smiling", "."],
+#     ["No", "she", "does", "not", "."],
+#     ["Yes", ",", "she", "is", "wearing", "something", "with", "thin", "straps", "."],
+#     ["Yes", ",", "she", "is", "cold", "."]],
+# "answer_label": 1,
+# "rationale_choices": [
+#     ["There", "is", "snow", "on", "the", "ground", ",", "and",
+#         "she", "is", "wearing", "a", "coat", "and", "hate", "."],
+#     ["She", "is", "standing", "with", "her", "arms", "crossed", "and", "looks", "disturbed", "."],
+#     ["She", "is", "sitting", "very", "rigidly", "and", "tensely", "on", "the", "edge", "of", "the",
+#         "bed", ".", "her", "posture", "is", "not", "relaxed", "and", "her", "face", "looks", "serious", "."],
+#     [[2], "is", "laying", "in", "bed", "but", "not", "sleeping", ".",
+#         "she", "looks", "sad", "and", "is", "curled", "into", "a", "ball", "."]],
+# "rationale_sources": [1921, 0, 9750, 25743],
+# "rationale_match_iter": [3, 0, 2, 1],
+# "rationale_label": 1,
+# "img_id": "train-0",
+# "question_number": 0,
+# "annot_id": "train-0",
+# "match_fold": "train-0",
+# "match_index": 0,
+# }
 
 def _fix_tokenization(tokenized_sent, bert_embs, old_det_to_new_ind, obj_to_type, token_indexers, pad_ind=-1):
     """
@@ -59,13 +96,28 @@ def _fix_tokenization(tokenized_sent, bert_embs, old_det_to_new_ind, obj_to_type
 
 
 class VCR(Dataset):
-    def __init__(self, split, mode, only_use_relevant_dets=True, add_image_as_a_box=True, embs_to_load='bert_da'):
+    def __init__(self, split, mode, only_use_relevant_dets=True, add_image_as_a_box=True, embs_to_load='bert_da',
+                 conditioned_answer_choice=0):
+        """
+
+        :param split: train, val, or test
+        :param mode: answer or rationale
+        :param only_use_relevant_dets: True, if we will only use the detections mentioned in the question and answer.
+                                       False, if we should use all detections.
+        :param add_image_as_a_box:     True to add the image in as an additional 'detection'. It'll go first in the list
+                                       of objects.
+        :param embs_to_load: Which precomputed embeddings to load.
+        :param conditioned_answer_choice: If you're in test mode, the answer labels aren't provided, which could be
+                                          a problem for the QA->R task. Pass in 'conditioned_answer_choice=i'
+                                          to always condition on the i-th answer.
+        """
         self.split = split
         self.mode = mode
         self.only_use_relevant_dets = only_use_relevant_dets
         print("Only relevant dets" if only_use_relevant_dets else "Using all detections", flush=True)
 
         self.add_image_as_a_box = add_image_as_a_box
+        self.conditioned_answer_choice = conditioned_answer_choice
 
         with open(os.path.join(VCR_ANNOTS_DIR, '{}.jsonl'.format(split)), 'r') as f:
             self.items = [json.loads(s) for s in f]
@@ -79,7 +131,6 @@ class VCR(Dataset):
         self.token_indexers = {'elmo': ELMoTokenCharactersIndexer()}
         self.vocab = Vocabulary()
 
-        # TODO: load COCO
         with open(os.path.join(os.path.dirname(VCR_ANNOTS_DIR), 'dataloaders', 'cocoontology.json'), 'r') as f:
             coco = json.load(f)
         self.coco_objects = ['__background__'] + [x['name'] for k, x in sorted(coco.items(), key=lambda x: int(x[0]))]
@@ -88,27 +139,33 @@ class VCR(Dataset):
         self.embs_to_load = embs_to_load
         self.h5fn = os.path.join(VCR_ANNOTS_DIR, f'{self.embs_to_load}_{self.mode}_{self.split}.h5')
         print("Loading embeddings from {}".format(self.h5fn), flush=True)
-        self.h5 = None
 
     @property
     def is_train(self):
         return self.split == 'train'
 
-    def get_h5_group(self, ind):
-        if self.h5 is None:
-            self.h5 = h5py.File(self.h5fn, 'r')
-        return self.h5[str(ind)]
-
     @classmethod
     def splits(cls, **kwargs):
         """ Helper method to generate splits of the dataset"""
-        kwargs_copy = {x:y for x,y in kwargs.items()}
+        kwargs_copy = {x: y for x, y in kwargs.items()}
         if 'mode' not in kwargs:
             kwargs_copy['mode'] = 'answer'
         train = cls(split='train', **kwargs_copy)
         val = cls(split='val', **kwargs_copy)
         test = cls(split='test', **kwargs_copy)
         return train, val, test
+
+    @classmethod
+    def eval_splits(cls, **kwargs):
+        """ Helper method to generate splits of the dataset. Use this for testing, because it will
+            condition on everything."""
+        for forbidden_key in ['mode', 'split', 'conditioned_answer_choice']:
+            if forbidden_key in kwargs:
+                raise ValueError(f"don't supply {forbidden_key} to eval_splits()")
+
+        stuff_to_return = [cls(split='test', mode='answer', **kwargs)] + [
+            cls(split='test', mode='rationale', conditioned_answer_choice=i, **kwargs) for i in range(4)]
+        return tuple(stuff_to_return)
 
     def __len__(self):
         return len(self.items)
@@ -154,15 +211,16 @@ class VCR(Dataset):
         return dets2use, old_det_to_new_ind
 
     def __getitem__(self, index):
-        if self.split == 'test':
-            raise ValueError("blind test mode not supported quite yet")
-
+        # if self.split == 'test':
+        #     raise ValueError("blind test mode not supported quite yet")
         item = deepcopy(self.items[index])
 
         ###################################################################
         # Load questions and answers
         if self.mode == 'rationale':
-            item['question'] += item['answer_choices'][item['answer_label']]
+            conditioned_label = item['answer_label'] if self.split != 'test' else self.conditioned_answer_choice
+            item['question'] += item['answer_choices'][conditioned_label]
+
         answer_choices = item['{}_choices'.format(self.mode)]
         dets2use, old_det_to_new_ind = self._get_dets_to_use(item)
 
@@ -170,13 +228,17 @@ class VCR(Dataset):
         # Load in BERT. We'll get contextual representations of the context and the answer choices
         # grp_items = {k: np.array(v, dtype=np.float16) for k, v in self.get_h5_group(index).items()}
         with h5py.File(self.h5fn, 'r') as h5:
-            grp_items = {k: np.array(v, dtype=np.float16) for k,v in h5[str(index)].items()}
+            grp_items = {k: np.array(v, dtype=np.float16) for k, v in h5[str(index)].items()}
+
+        # Essentially we need to condition on the right answer choice here, if we're doing QA->R. We will always
+        # condition on the `conditioned_answer_choice.`
+        condition_key = self.conditioned_answer_choice if self.split == "test" and self.mode == "rationale" else ""
 
         instance_dict = {}
         if 'endingonly' not in self.embs_to_load:
             questions_tokenized, question_tags = zip(*[_fix_tokenization(
                 item['question'],
-                grp_items[f'ctx_{self.mode}{i}'],
+                grp_items[f'ctx_{self.mode}{condition_key}{i}'],
                 old_det_to_new_ind,
                 item['objects'],
                 token_indexers=self.token_indexers,
@@ -187,7 +249,7 @@ class VCR(Dataset):
 
         answers_tokenized, answer_tags = zip(*[_fix_tokenization(
             answer,
-            grp_items[f'answer_{self.mode}{i}'],
+            grp_items[f'answer_{self.mode}{condition_key}{i}'],
             old_det_to_new_ind,
             item['objects'],
             token_indexers=self.token_indexers,
@@ -196,8 +258,11 @@ class VCR(Dataset):
 
         instance_dict['answers'] = ListField(answers_tokenized)
         instance_dict['answer_tags'] = ListField(answer_tags)
-        instance_dict['label'] = LabelField(item['{}_label'.format(self.mode)], skip_indexing=True)
-        instance_dict['ind'] = LabelField(index, skip_indexing=True)
+        if self.split != 'test':
+            instance_dict['label'] = LabelField(item['{}_label'.format(self.mode)], skip_indexing=True)
+        instance_dict['metadata'] = MetadataField({'annot_id': item['annot_id'], 'ind': index, 'movie': item['movie'],
+                                                   'img_fn': item['img_fn'],
+                                                   'question_number': item['question_number']})
 
         ###################################################################
         # Load image now and rescale it. Might have to subtract the mean and whatnot here too.
@@ -211,7 +276,7 @@ class VCR(Dataset):
         with open(os.path.join(VCR_IMAGES_DIR, item['metadata_fn']), 'r') as f:
             metadata = json.load(f)
 
-        #[nobj, 14, 14]
+        # [nobj, 14, 14]
         segms = np.stack([make_mask(mask_size=14, box=metadata['boxes'][i], polygons_list=metadata['segms'][i])
                           for i in dets2use])
 
@@ -242,6 +307,7 @@ class VCR(Dataset):
         instance.index_fields(self.vocab)
         return image, instance
 
+
 def collate_fn(data, to_gpu=False):
     """Creates mini-batch tensors
     """
@@ -261,8 +327,10 @@ def collate_fn(data, to_gpu=False):
 
     if to_gpu:
         for k in td:
-            td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
+            if k != 'metadata':
+                td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
                 non_blocking=True)
+ 
     # # No nested dicts
     # for k in sorted(td.keys()):
     #     if isinstance(td[k], dict):
@@ -286,20 +354,16 @@ class VCRLoader(torch.utils.data.DataLoader):
             batch_size=batch_size * num_gpus,
             shuffle=data.is_train,
             num_workers=num_workers,
-            collate_fn=lambda x: collate_fn(x, to_gpu=num_workers==0),
+            collate_fn=lambda x: collate_fn(x, to_gpu=num_workers == 0),
             drop_last=data.is_train,
             pin_memory=False,
             **kwargs,
         )
         return loader
 
-
-if __name__ == '__main__':
-
-    train, val, test = VCR.splits()
-    for i in range(len(train)):
-        res = train[i]
-        print("done with {}".format(i))
-    # NUM_GPUS = torch.cuda.device_count()
-    # train_loader = VCRLoader.from_dataset(val, batch_size=32, num_gpus=NUM_GPUS,
-    #                                         num_workers=5 if NUM_GPUS > 1 else 0)
+# You could use this for debugging maybe
+# if __name__ == '__main__':
+#     train, val, test = VCR.splits()
+#     for i in range(len(train)):
+#         res = train[i]
+#         print("done with {}".format(i))

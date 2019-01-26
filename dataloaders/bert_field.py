@@ -28,6 +28,9 @@ class BertField(SequenceField[Dict[str, torch.Tensor]]):
         self.embs = embs
         self.padding_value = padding_value
 
+        if len(self.tokens) != self.embs.shape[0]:
+            raise ValueError("The tokens you passed into the BERTField, {} "
+                             "aren't the same size as the embeddings of shape {}".format(self.tokens, self.embs.shape))
         assert len(self.tokens) == self.embs.shape[0]
 
     @overrides

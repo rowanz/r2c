@@ -293,7 +293,7 @@ def data_iter_test(data_fn, tokenizer, max_seq_length, endingonly):
             for i in range(4):
                 qa_tokens, r_tokens = fix_item(item, answer_label=i, rationales=True)
                 for r_token in r_tokens:
-                    yield process_ctx_ans_for_bert(q_tokens, r_token, tokenizer, counter=counter,
+                    yield process_ctx_ans_for_bert(qa_tokens, r_token, tokenizer, counter=counter,
                                                    endingonly=endingonly,
                                                    max_seq_length=max_seq_length, is_correct=False)
                     counter += 1

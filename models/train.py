@@ -176,22 +176,20 @@ for epoch_num in range(start_epoch, params['trainer']['num_epochs'] + start_epoc
     save_checkpoint(model, optimizer, args.folder, epoch_num, val_metric_per_epoch,
                     is_best=int(np.argmax(val_metric_per_epoch)) == (len(val_metric_per_epoch) - 1))
 
-# todo - make blind test work.
-# print("STOPPING. now running on the test set", flush=True)
-# # Load best
-# restore_best_checkpoint(model, args.folder)
-# model.eval()
-# for eval_set, name in [(test_loader, 'test'), (val_loader, 'val')]:
-#     test_probs = []
-#     test_labels = []
-#     for b, (time_per_batch, batch) in enumerate(time_batch(eval_set)):
-#         with torch.no_grad():
-#             batch = _to_gpu(batch)
-#             output_dict = model(**batch)
-#             test_probs.append(output_dict['label_probs'].detach().cpu().numpy())
-#             test_labels.append(batch['label'].detach().cpu().numpy())
-#     test_labels = np.concatenate(test_labels, 0)
-#     test_probs = np.concatenate(test_probs, 0)
-#     acc = float(np.mean(test_labels == test_probs.argmax(1)))
-#     print("Final {} accuracy is {:.3f}".format(name, acc))
-#     np.save(os.path.join(args.folder, f'{name}preds.npy'), test_probs)
+print("STOPPING. now running the best model on the validation set", flush=True)
+# Load best
+restore_best_checkpoint(model, args.folder)
+model.eval()
+val_probs = []
+val_labels = []
+for b, (time_per_batch, batch) in enumerate(time_batch(val_loader)):
+    with torch.no_grad():
+        batch = _to_gpu(batch)
+        output_dict = model(**batch)
+        val_probs.append(output_dict['label_probs'].detach().cpu().numpy())
+        val_labels.append(batch['label'].detach().cpu().numpy())
+val_labels = np.concatenate(val_labels, 0)
+val_probs = np.concatenate(val_probs, 0)
+acc = float(np.mean(val_labels == val_probs.argmax(1)))
+print("Final val accuracy is {:.3f}".format(acc))
+np.save(os.path.join(args.folder, f'valpreds.npy'), val_probs)
