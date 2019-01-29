@@ -19,5 +19,7 @@ Running R2c requires computed bert representations in this folder. Warning: thes
     * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert_da_rationale_val.h5`
     * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert_da_answer_test.h5`
     * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert_da_rationale_test.h5`
-2. You can use the script in the folder `get_bert_embeddings` to precompute BERT representations for all sentences.
-
+2. You can use the script in the folder `get_bert_embeddings` to precompute BERT representations for all sentences. If you want my finetuned checkpoint, it's available below. (note that you *don't* need this checkpoint if you want to just use the embeddings I shared above.)
+    * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert-pretrain/model.ckpt-53230.data-00000-of-00001`
+    * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert-pretrain/model.ckpt-53230.index`
+    * `https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/bert-pretrain/model.ckpt-53230.meta`
