@@ -325,11 +325,12 @@ def collate_fn(data, to_gpu=False):
     td['box_mask'] = torch.all(td['boxes'] >= 0, -1).long()
     td['images'] = images
 
-    if to_gpu:
-        for k in td:
-            if k != 'metadata':
-                td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
-                non_blocking=True)
+    # Deprecated
+    # if to_gpu:
+    #     for k in td:
+    #         if k != 'metadata':
+    #             td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
+    #             non_blocking=True)
  
     # # No nested dicts
     # for k in sorted(td.keys()):
@@ -354,7 +355,7 @@ class VCRLoader(torch.utils.data.DataLoader):
             batch_size=batch_size * num_gpus,
             shuffle=data.is_train,
             num_workers=num_workers,
-            collate_fn=lambda x: collate_fn(x, to_gpu=num_workers == 0),
+            collate_fn=lambda x: collate_fn(x, to_gpu=False),
             drop_last=data.is_train,
             pin_memory=False,
             **kwargs,

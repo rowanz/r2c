@@ -72,8 +72,9 @@ def _to_gpu(td):
     if NUM_GPUS > 1:
         return td
     for k in td:
-        td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
-            non_blocking=True)
+        if k != 'metadata':
+            td[k] = {k2: v.cuda(non_blocking=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
+                non_blocking=True)
     return td
 num_workers = (4 * NUM_GPUS if NUM_CPUS == 32 else 2*NUM_GPUS)-1
 print(f"Using {num_workers} workers out of {NUM_CPUS} possible", flush=True)
