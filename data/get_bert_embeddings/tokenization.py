@@ -26,12 +26,7 @@ import tensorflow as tf
 
 def convert_to_unicode(text, errors="ignore"):
   """Converts `text` to Unicode (if it's not already), assuming utf-8 input."""
-  if isinstance(text, six.text_type):
-    return text
-  elif isinstance(text, six.binary_type):
-    return text.decode("utf-8", errors)
-  else:
-    raise ValueError("Unsupported string type: %s" % (type(text)))
+  return six.ensure_text(text, encoding="utf-8", errors=errors)
 
 
 def printable_text(text):
