@@ -16,8 +16,8 @@ labels = {
 with open('./data/val.jsonl', 'r') as f:
     for line in f:
         item = json.loads(line)
-        labels[f'{val_answer'].append(item['answer_label'])
-        labels[f'{val_rationale'].append(item['rationale_label'])
+        labels[f'val_answer'].append(item['answer_label'])
+        labels[f'val_rationale'].append(item['rationale_label'])
 for k in labels:
     labels[k] = np.array(labels[k])
 
