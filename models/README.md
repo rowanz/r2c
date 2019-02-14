@@ -17,6 +17,9 @@ python train.py -params multiatt/default.json -folder saves/flagship_answer
 python train.py -params multiatt/default.json -folder saves/flagship_rationale -rationale
 ```
 
+You can combine the validation predictions using
+`python eval_q2ar.py -answer_preds saves/flagship_answer/valpreds.npy -rationale_preds saves/flagship_rationale/valpreds.npy`
+
 ## Submitting to the leaderboard
 
 VCR features a [leaderboard](https://visualcommonsense.com/leaderboard/) where you can submit your answers on the test set. Submitting to the leaderboard is easy! You'll need to submit something like [the example submission CSV file](https://s3-us-west-2.amazonaws.com/ai2-rowanz/r2c/example-submission.csv). You can use the `eval_for_leaderboard.py` script, which formats everything in the right way.

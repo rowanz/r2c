@@ -17,9 +17,9 @@ In particular, I have code and checkpoints for the Recognition to Cognition (R2C
 We'll treat going from Q->A and QA->R as two separate tasks: in each, the model is given a 'query' (question, or question+answer) and 'response choices' (answer, or rationale). Essentially, we'll use BERT and detection regions to *ground* the words in the query, then *contextualize* the query with the response. We'll perform several steps of *reasoning* on top of a representation consisting of the response choice in question, the attended query, and the attended detection regions. See the paper for more details.
 
 ## What this repo has / doesn't have
-I have code and checkpoints for replicating my R2C results. You might find the dataloader useful (in dataloaders/vcr.py), as it handles loading the data in a nice way using the allennlp library. You can submit to the [leaderboard](https://visualcommonsense.com/leaderboard/) using my script in 'models/eval_for_leaderboard.py'
+I have code and checkpoints for replicating my R2C results. You might find the dataloader useful (in dataloaders/vcr.py), as it handles loading the data in a nice way using the allennlp library. You can submit to the [leaderboard](https://visualcommonsense.com/leaderboard/) using my script in `models/eval_for_leaderboard.py`
 
-You can train a model using `models/train.py`. This also has code to obtain model predictions. Use `eval_all.py` in the main directory to get validation results combining Q->A and QA->R components.
+You can train a model using `models/train.py`. This also has code to obtain model predictions. Use `models/eval_q2ar.py` to get validation results combining Q->A and QA->R components.
 
 # Setting up and using the repo
 
