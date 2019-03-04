@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# bert-embeddings
+data/bert_da*
+
+# Data Annotations
+data/*.jsonl
+
+# Data symbolic link
+data/vcr1images
