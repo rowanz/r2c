@@ -111,3 +111,6 @@ data/*.jsonl
 
 # Data symbolic link
 data/vcr1images
+
+# Submission File
+models/submission.csv
