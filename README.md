@@ -1,4 +1,4 @@
-# From Recognition to Cognition: Visual Commonsense Reasoning
+# From Recognition to Cognition: Visual Commonsense Reasoning (cvpr 2019 oral)
 
 This repository contains data and PyTorch code for the paper [From Recognition to Cognition: Visual Commonsense Reasoning (arxiv)](https://visualcommonsense.com). For more info, check out the project page at [visualcommonsense.com](https://visualcommonsense.com). For updates, or to ask for help, [check out and join our google group!!](https://groups.google.com/forum/#!forum/visualcommonsense/join)
 
@@ -73,10 +73,10 @@ Feel free to open an issue if you encounter trouble getting it to work! [Or, pos
 ### Bibtex
 
 ```
-@article{zellers2018vcr,
+@inproceedings{zellers2018vcr,
   title={From Recognition to Cognition: Visual Commonsense Reasoning},
   author={Zellers, Rowan and Bisk, Yonatan and Farhadi, Ali and Choi, Yejin},
-  journal={arXiv preprint arXiv:1811.10830},
-  year={2018}
+  journal={Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2019}
 }
 ```
