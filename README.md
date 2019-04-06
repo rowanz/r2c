@@ -45,7 +45,7 @@ source activate r2c
 
 conda install numpy pyyaml setuptools cmake cffi tqdm pyyaml scipy ipython mkl mkl-include cython typing h5py pandas nltk spacy numpydoc scikit-learn jpeg
 
-conda install pytorch -c pytorch
+conda install pytorch cudatoolkit=9.0 -c pytorch
 pip install git+git://github.com/pytorch/vision.git@24577864e92b72f7066e1ed16e978e873e19d13d
 
 pip install -r allennlp-requirements.txt
