@@ -73,10 +73,11 @@ Feel free to open an issue if you encounter trouble getting it to work! [Or, pos
 ### Bibtex
 
 ```
-@inproceedings{zellers2018vcr,
-  title={From Recognition to Cognition: Visual Commonsense Reasoning},
-  author={Zellers, Rowan and Bisk, Yonatan and Farhadi, Ali and Choi, Yejin},
-  journal={Conference on Computer Vision and Pattern Recognition (CVPR)},
-  year={2019}
+@inproceedings{zellers2019vcr,
+    author = {Zellers, Rowan and Bisk, Yonatan and Farhadi, Ali and Choi, Yejin},
+    title = {From Recognition to Cognition: Visual Commonsense Reasoning},
+    booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month = {June},
+    year = {2019}
 }
 ```
