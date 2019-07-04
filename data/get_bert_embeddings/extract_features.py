@@ -206,7 +206,7 @@ estimator = tf.contrib.tpu.TPUEstimator(
     config=run_config,
     predict_batch_size=FLAGS.batch_size)
 
-input_fn = input_fn_builder(
+input_fn, input_init_hook = input_fn_builder(
     features=features, seq_length=FLAGS.max_seq_length)
 
 output_h5_qa = h5py.File(f'../{FLAGS.name}_answer_{FLAGS.split}.h5', 'w')
@@ -254,7 +254,9 @@ def alignment_gather(alignment, layer):
     return output_embs
 
 
-for result in tqdm(estimator.predict(input_fn, yield_single_examples=True)):
+for result in tqdm(estimator.predict(input_fn, 
+                                     hooks=[input_init_hook],
+                                     yield_single_examples=True)):
     ind = unique_id_to_ind[int(result["unique_id"])]
 
     text, ctx_alignment, choice_alignment = examples[ind]

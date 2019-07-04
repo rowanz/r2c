@@ -25,8 +25,24 @@ class InputFeatures(object):
         self.is_correct = is_correct
 
 
+class IteratorInitializerHook(tf.train.SessionRunHook):
+    """Hook to initialise data iterator after Session is created."""
+
+    def __init__(self):
+        super(IteratorInitializerHook, self).__init__()
+        self.__init__iterator_initializer_func = None
+
+    def after_create_session(self, session, coord):
+        """Initialise the iterator after the session has been created."""
+        self.iterator_initializer_func(session)
+
+
 def input_fn_builder(features, seq_length):
     """Creates an `input_fn` closure to be passed to TPUEstimator."""
+
+    iterator_initializer_hook = IteratorInitializerHook()
+    
+    num_examples = len(features)
 
     all_unique_ids = []
     all_input_ids = []
@@ -39,38 +55,42 @@ def input_fn_builder(features, seq_length):
         all_input_mask.append(feature.input_mask)
         all_input_type_ids.append(feature.input_type_ids)
 
+
     def input_fn(params):
         """The actual input function."""
         batch_size = params["batch_size"]
 
-        num_examples = len(features)
-
         # This is for demo purposes and does NOT scale to large data sets. We do
         # not use Dataset.from_generator() because that uses tf.py_func which is
         # not TPU compatible. The right way to load data is with TFRecordReader.
+        
+        unique_ids_placeholder = tf.placeholder(tf.int32, [num_examples])
+        input_ids_placeholder = tf.placeholder(tf.int32, [num_examples, seq_length])
+        input_mask_placeholder = tf.placeholder(tf.int32, [num_examples, seq_length])
+        input_type_ids_placeholder = tf.placeholder(tf.int32, [num_examples, seq_length])
+
+
         d = tf.data.Dataset.from_tensor_slices({
-            "unique_ids":
-                tf.constant(all_unique_ids, shape=[num_examples], dtype=tf.int32),
-            "input_ids":
-                tf.constant(
-                    all_input_ids, shape=[num_examples, seq_length],
-                    dtype=tf.int32),
-            "input_mask":
-                tf.constant(
-                    all_input_mask,
-                    shape=[num_examples, seq_length],
-                    dtype=tf.int32),
-            "input_type_ids":
-                tf.constant(
-                    all_input_type_ids,
-                    shape=[num_examples, seq_length],
-                    dtype=tf.int32),
+            "unique_ids": unique_ids_placeholder,
+            "input_ids": input_ids_placeholder,
+            "input_mask": input_mask_placeholder,
+            "input_type_ids": input_type_ids_placeholder
         })
 
         d = d.batch(batch_size=batch_size, drop_remainder=False)
-        return d
+        
+        feed_dict_d = {unique_ids_placeholder:all_unique_ids, input_ids_placeholder: all_input_ids,
+                 input_mask_placeholder: all_input_mask, input_type_ids_placeholder: all_input_type_ids}
 
-    return input_fn
+        iterator = d.make_initializable_iterator()
+        feats = iterator.get_next()
+
+        iterator_initializer_hook.iterator_initializer_func = lambda sess: sess.run(iterator.initializer,
+                                                                feed_dict=feed_dict_d)
+
+        return feats
+
+    return input_fn, iterator_initializer_hook
 
 
 GENDER_NEUTRAL_NAMES = ['Casey', 'Riley', 'Jessie', 'Jackie', 'Avery', 'Jaime', 'Peyton', 'Kerry', 'Jody', 'Kendall',

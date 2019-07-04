@@ -39,14 +39,14 @@ parser.add_argument(
 parser.add_argument(
     '-answer_ckpt',
     dest='answer_ckpt',
-    default='saves/flagship_answer/best.th',
+    default='/data/vcr/saves/flagship_answer/best.th',
     help='Answer checkpoint',
     type=str,
 )
 parser.add_argument(
     '-rationale_ckpt',
     dest='rationale_ckpt',
-    default='saves/flagship_rationale/best.th',
+    default='/data/vcr/saves/flagship_rationale/best.th',
     help='Rationale checkpoint',
     type=str,
 )
@@ -71,7 +71,8 @@ def _to_gpu(td):
     if NUM_GPUS > 1:
         return td
     for k in td:
-        td[k] = {k2: v.cuda(async=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
+        if k != 'metadata':
+            td[k] = {k2: v.cuda(async=True) for k2, v in td[k].items()} if isinstance(td[k], dict) else td[k].cuda(
             async=True)
     return td
 
